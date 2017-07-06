@@ -79,6 +79,7 @@ enum dpif_ipfix_tunnel_type {
     DPIF_IPFIX_TUNNEL_LISP = 0x03,
     DPIF_IPFIX_TUNNEL_STT = 0x04,
     DPIF_IPFIX_TUNNEL_GENEVE = 0x07,
+    DPIF_IPFIX_TUNNEL_GTP = 0x08,
     NUM_DPIF_IPFIX_TUNNEL
 };
 
@@ -341,6 +342,7 @@ static uint8_t tunnel_protocol[NUM_DPIF_IPFIX_TUNNEL] = {
     IPPROTO_TCP,    /* DPIF_IPFIX_TUNNEL_STT*/
     0          ,    /* reserved */
     IPPROTO_UDP,    /* DPIF_IPFIX_TUNNEL_GENEVE*/
+    IPPROTO_UDP,    /* DPIF_IPFIX_TUNNEL_GTP*/
 };
 
 OVS_PACKED(
@@ -446,6 +448,7 @@ BUILD_ASSERT_DECL(sizeof(struct ipfix_data_record_aggregated_tcp) == 48);
  * support tunnel key for:
  * VxLAN: 24-bit VIN,
  * GRE: 32-bit key,
+ * GTP: 32-bit key,
  * LISP: 24-bit instance ID
  * STT: 64-bit key
  */
@@ -738,6 +741,9 @@ dpif_ipfix_add_tunnel_port(struct dpif_ipfix *di, struct ofport *ofport,
     } else if (strcmp(type, "lisp") == 0) {
         dip->tunnel_type = DPIF_IPFIX_TUNNEL_LISP;
         dip->tunnel_key_length = 3;
+    } else if (strcmp(type, "gtp") == 0) {
+        dip->tunnel_type = DPIF_IPFIX_TUNNEL_GTP;
+        dip->tunnel_key_length = 4;
     } else if (strcmp(type, "geneve") == 0) {
         dip->tunnel_type = DPIF_IPFIX_TUNNEL_GENEVE;
         dip->tunnel_key_length = 3;
