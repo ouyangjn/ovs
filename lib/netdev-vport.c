@@ -54,6 +54,7 @@ VLOG_DEFINE_THIS_MODULE(netdev_vport);
 
 #define GENEVE_DST_PORT 6081
 #define VXLAN_DST_PORT 4789
+#define GTP_DST_PORT 2152
 #define LISP_DST_PORT 4341
 #define STT_DST_PORT 7471
 
@@ -106,7 +107,8 @@ netdev_vport_needs_dst_port(const struct netdev *dev)
 
     return (class->get_config == get_tunnel_config &&
             (!strcmp("geneve", type) || !strcmp("vxlan", type) ||
-             !strcmp("lisp", type) || !strcmp("stt", type)) );
+             !strcmp("gtp", type) || !strcmp("lisp", type) ||
+             !strcmp("stt", type)) );
 }
 
 const char *
@@ -194,6 +196,8 @@ netdev_vport_construct(struct netdev *netdev_)
         dev->tnl_cfg.dst_port = htons(GENEVE_DST_PORT);
     } else if (!strcmp(type, "vxlan")) {
         dev->tnl_cfg.dst_port = htons(VXLAN_DST_PORT);
+    } else if (!strcmp(type, "gtp")) {
+        dev->tnl_cfg.dst_port = htons(GTP_DST_PORT);
     } else if (!strcmp(type, "lisp")) {
         dev->tnl_cfg.dst_port = htons(LISP_DST_PORT);
     } else if (!strcmp(type, "stt")) {
@@ -403,7 +407,7 @@ static enum tunnel_layers
 tunnel_supported_layers(const char *type,
                         const struct netdev_tunnel_config *tnl_cfg)
 {
-    if (!strcmp(type, "lisp")) {
+    if (!strcmp(type, "lisp") || !strcmp(type, "gtp")) {
         return TNL_L3;
     } else if (!strcmp(type, "gre")) {
         return TNL_L2 | TNL_L3;
@@ -444,6 +448,10 @@ set_tunnel_config(struct netdev *dev_, const struct smap *args, char **errp)
 
     if (!strcmp(type, "vxlan")) {
         tnl_cfg.dst_port = htons(VXLAN_DST_PORT);
+    }
+
+    if (!strcmp(type, "gtp")) {
+        tnl_cfg.dst_port = htons(GTP_DST_PORT);
     }
 
     if (!strcmp(type, "lisp")) {
@@ -698,6 +706,7 @@ get_tunnel_config(const struct netdev *dev, struct smap *args)
 
         if ((!strcmp("geneve", type) && dst_port != GENEVE_DST_PORT) ||
             (!strcmp("vxlan", type) && dst_port != VXLAN_DST_PORT) ||
+            (!strcmp("gtp", type) && dst_port != GTP_DST_PORT) ||
             (!strcmp("lisp", type) && dst_port != LISP_DST_PORT) ||
             (!strcmp("stt", type) && dst_port != STT_DST_PORT)) {
             smap_add_format(args, "dst_port", "%d", dst_port);
@@ -975,6 +984,7 @@ netdev_vport_tunnel_register(void)
                                            netdev_tnl_push_udp_header,
                                            netdev_vxlan_pop_header,
                                            NETDEV_VPORT_GET_IFINDEX),
+        TUNNEL_CLASS("gtp", "gtp_sys", NULL, NULL, NULL, NULL),
         TUNNEL_CLASS("lisp", "lisp_sys", NULL, NULL, NULL, NULL),
         TUNNEL_CLASS("stt", "stt_sys", NULL, NULL, NULL, NULL),
     };

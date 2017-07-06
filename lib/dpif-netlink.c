@@ -776,6 +776,9 @@ get_vport_type(const struct dpif_netlink_vport *vport)
     case OVS_VPORT_TYPE_GRE:
         return "gre";
 
+    case OVS_VPORT_TYPE_GTP:
+        return "gtp";
+
     case OVS_VPORT_TYPE_VXLAN:
         return "vxlan";
 
@@ -808,6 +811,8 @@ netdev_to_ovs_vport_type(const char *type)
         return OVS_VPORT_TYPE_GENEVE;
     } else if (strstr(type, "gre")) {
         return OVS_VPORT_TYPE_GRE;
+    } else if (strstr(type, "gtp")) {
+        return OVS_VPORT_TYPE_GTP;
     } else if (!strcmp(type, "vxlan")) {
         return OVS_VPORT_TYPE_VXLAN;
     } else if (!strcmp(type, "lisp")) {
