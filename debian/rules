@@ -77,6 +77,11 @@ override_dh_install-indep:
 	# check we can get kernel module names
 	$(MAKE) -C datapath print-build-modules
 
+
+	# make GTP flow based kernel patch
+	cd flow-based-gtp-linux-v4.9 && $(MAKE) build
+	cp flow-based-gtp-linux-v4.9/Module.symvers debian/$(PACKAGE_DKMS)/usr/src/$(PACKAGE)-$(DEB_VERSION_UPSTREAM)/datapath/linux
+
 	# Prepare dkms.conf from the dkms.conf.in template
 	sed "s/__VERSION__/$(DEB_VERSION_UPSTREAM)/g; s/__MODULES__/$(shell $(MAKE) -C datapath print-build-modules | grep -v make)/" debian/dkms.conf.in > debian/$(PACKAGE_DKMS)/usr/src/$(PACKAGE)-$(DEB_VERSION_UPSTREAM)/dkms.conf
 
